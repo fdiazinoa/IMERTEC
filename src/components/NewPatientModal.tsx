@@ -20,9 +20,10 @@ import {
 interface NewPatientModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onPatientCreated?: (patientId: string) => void;
 }
 
-export const NewPatientModal: React.FC<NewPatientModalProps> = ({ isOpen, onClose }) => {
+export const NewPatientModal: React.FC<NewPatientModalProps> = ({ isOpen, onClose, onPatientCreated }) => {
   const { addPatient } = useClinical();
 
   const [firstName, setFirstName] = useState('');
@@ -75,7 +76,7 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({ isOpen, onClos
       return;
     }
 
-    addPatient({
+    const newPatient = addPatient({
       firstName: firstName.trim(),
       lastName: lastName.trim(),
       birthDate,
@@ -107,6 +108,7 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({ isOpen, onClos
           : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
     });
 
+    onPatientCreated?.(newPatient.id);
     onClose();
   };
 
