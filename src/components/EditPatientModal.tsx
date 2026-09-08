@@ -18,12 +18,14 @@ interface EditPatientModalProps {
   patient: Patient;
   isOpen: boolean;
   onClose: () => void;
+  onPatientUpdated?: () => void;
 }
 
 export const EditPatientModal: React.FC<EditPatientModalProps> = ({
   patient,
   isOpen,
   onClose,
+  onPatientUpdated,
 }) => {
   const { updatePatient } = useClinical();
 
@@ -47,7 +49,8 @@ export const EditPatientModal: React.FC<EditPatientModalProps> = ({
       return;
     }
 
-    updatePatient(patient.id, {
+    updatePatient({
+      ...patient,
       phone,
       email: email.trim() || undefined,
       address,
@@ -58,8 +61,9 @@ export const EditPatientModal: React.FC<EditPatientModalProps> = ({
         phone: emergencyPhone,
         relationship: emergencyRelation,
       },
-    }, editReason);
+    });
 
+    onPatientUpdated?.();
     onClose();
   };
 
@@ -76,7 +80,7 @@ export const EditPatientModal: React.FC<EditPatientModalProps> = ({
                 Editar Datos de Paciente
               </h2>
               <p className="text-xs text-slate-400">
-                {patient.firstName} {patient.lastName} ({patient.id} • {patient.mrn})
+                {patient.firstName} {patient.lastName} ({patient.id} • {patient.medicalRecordNumber})
               </p>
             </div>
           </div>

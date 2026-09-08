@@ -34,10 +34,9 @@ const AppContent: React.FC = () => {
     setSelectedPatient,
     startEncounter,
     currentUser,
+    isAuthenticated,
+    logout,
   } = useClinical();
-
-  // Auth State (starts authenticated with demo session, user can log out or switch)
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
 
   // Navigation State
   const [currentTab, setCurrentTab] = useState<string>('dashboard');
@@ -50,6 +49,7 @@ const AppContent: React.FC = () => {
   const [isTestSuiteOpen, setIsTestSuiteOpen] = useState(false);
 
   const handleSelectPatient = (id: string, targetTab?: string) => {
+    setSelectedPatient(id);
     setCurrentTab(targetTab || 'summary');
   };
 
@@ -59,7 +59,7 @@ const AppContent: React.FC = () => {
   };
 
   if (!isAuthenticated) {
-    return <LoginView onLoginSuccess={() => setIsAuthenticated(true)} />;
+    return <LoginView />;
   }
 
   const isPatientSubView = [
@@ -85,7 +85,7 @@ const AppContent: React.FC = () => {
         onOpenSafetyModal={() => setIsSafetyModalOpen(true)}
         onStartEncounter={handleStartEncounter}
         onOpenTestSuite={() => setIsTestSuiteOpen(true)}
-        onLogout={() => setIsAuthenticated(false)}
+        onLogout={logout}
       />
 
       {/* 2. Patient Executive Header & Sub-Navigation (if viewing patient record) */}
@@ -187,6 +187,7 @@ const AppContent: React.FC = () => {
         isOpen={isNewPatientModalOpen}
         onClose={() => setIsNewPatientModalOpen(false)}
         onPatientCreated={(newId) => {
+          setSelectedPatient(newId);
           setCurrentTab('summary');
         }}
       />
