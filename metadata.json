@@ -1,0 +1,6 @@
+{
+  "name": "IMERTEC — Ecosistema Clínico Inteligente",
+  "description": "Plataforma clínica integral longitudinal orientada a MIACI, ECI y estadificación biológica del envejecimiento SICBE.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
