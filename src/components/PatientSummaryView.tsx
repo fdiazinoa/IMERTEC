@@ -276,6 +276,33 @@ export const PatientSummaryView: React.FC<PatientSummaryViewProps> = ({
         </div>
       </div>
 
+      {/* Tendencias visibles junto a las métricas principales */}
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-bold text-slate-900">Tendencias clínicas</h3>
+            <p className="mt-0.5 text-xs text-slate-500">Cambios registrados entre visitas</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => onNavigateTab('timeline')}
+            className="text-xs font-semibold text-cyan-700 hover:text-cyan-900"
+          >
+            Ver evolución completa
+          </button>
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+            <span className="mb-3 block text-xs font-semibold text-slate-600">Peso corporal</span>
+            {renderSparkline(longitudinalPoints.map((point) => point.weightKg), '#0284c7', 'kg')}
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+            <span className="mb-3 block text-xs font-semibold text-slate-600">Velocidad de marcha</span>
+            {renderSparkline(longitudinalPoints.map((point) => point.gaitSpeedMs), '#059669', 'm/s', 0.4, 1.3)}
+          </div>
+        </div>
+      </section>
+
       {/* 3. Tarjeta de Estado de Salud & Clasificación Biológica */}
       <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
@@ -514,7 +541,7 @@ export const PatientSummaryView: React.FC<PatientSummaryViewProps> = ({
               <SlidersHorizontal className="w-3.5 h-3.5" />
             </span>
             <span className="text-xs font-bold text-slate-800">
-              Detalles Técnicos, Tendencias y Confiabilidad Epistemológica (ECI v2.1)
+              Detalles técnicos y confiabilidad clínica (ECI v2.1)
             </span>
           </div>
           <span className="text-xs font-semibold text-cyan-700 flex items-center gap-1">
@@ -525,7 +552,7 @@ export const PatientSummaryView: React.FC<PatientSummaryViewProps> = ({
 
         {showTechnicalDetails && (
           <div className="px-6 pb-6 pt-2 border-t border-slate-100 space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               {/* Indices ECI */}
               <div className="p-4 rounded-xl bg-slate-50/80 border border-slate-200 space-y-2 text-xs">
                 <span className="font-bold text-slate-800 block">Índices de Confiabilidad Epistemológica</span>
@@ -541,19 +568,6 @@ export const PatientSummaryView: React.FC<PatientSummaryViewProps> = ({
                   <span>Hechos observados $X(t)$: 42</span>
                   <span>Inferencias $Z(t)$: 11</span>
                   <span>Incertidumbres $U(t)$: 2</span>
-                </div>
-              </div>
-
-              {/* Sparklines */}
-              <div className="p-4 rounded-xl bg-slate-50/80 border border-slate-200 space-y-3 text-xs">
-                <span className="font-bold text-slate-800 block">Curvas Rápidas Intervisitas</span>
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-600">Peso Corporal:</span>
-                  {renderSparkline(longitudinalPoints.map((p) => p.weightKg), '#0284c7', 'kg')}
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-600">Velocidad Marcha:</span>
-                  {renderSparkline(longitudinalPoints.map((p) => p.gaitSpeedMs), '#059669', 'm/s', 0.4, 1.3)}
                 </div>
               </div>
             </div>
