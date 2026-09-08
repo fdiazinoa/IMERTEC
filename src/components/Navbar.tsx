@@ -33,7 +33,8 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const navigation = [
     { id: 'dashboard', label: 'Inicio', active: currentTab === 'dashboard' },
-    { id: 'patients', label: 'Pacientes', active: currentTab === 'patients' || patientTabs.includes(currentTab) },
+    { id: 'patients', label: 'Pacientes', active: currentTab === 'patients' },
+    { id: 'summary', label: 'Expediente', active: patientTabs.includes(currentTab) },
     { id: 'alerts', label: 'Alertas', active: currentTab === 'alerts' },
   ];
 
@@ -53,13 +54,13 @@ export const Navbar: React.FC<NavbarProps> = ({
           </span>
         </button>
 
-        <nav className="flex flex-1 items-center gap-1" aria-label="Navegación principal">
+        <nav className="flex flex-1 items-center gap-0.5 sm:gap-1" aria-label="Navegación principal">
           {navigation.map((item) => (
             <button
               key={item.id}
               type="button"
               onClick={() => setCurrentTab(item.id)}
-              className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+              className={`rounded-lg px-2 py-2 text-xs font-medium transition-colors sm:px-3 sm:text-sm ${
                 item.active ? 'bg-cyan-50 text-cyan-800' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
               }`}
             >
