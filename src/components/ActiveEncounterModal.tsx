@@ -23,6 +23,8 @@ import {
   Search,
   AlertOctagon,
   Info,
+  UserRound,
+  ClipboardCheck,
 } from 'lucide-react';
 import { InferredStateM23 } from '../types/clinical';
 import {
@@ -55,14 +57,13 @@ export const ActiveEncounterModal: React.FC<ActiveEncounterModalProps> = ({ isOp
   } = useClinical();
 
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
+  const [patientGuideStep, setPatientGuideStep] = useState<1 | 2 | 3 | 4>(1);
   const [assessmentMode, setAssessmentMode] = useState<'ADAPTIVE' | 'MANUAL'>('ADAPTIVE');
 
   // Form State
-  const [chiefComplaint, setChiefComplaint] = useState(
-    selectedPatient.id === 'PAT-002'
-      ? 'Evaluación pre-quirúrgica y funcional integral. Refiere sensación de pesadez pélvica leve.'
-      : 'Control periódico de salud y monitoreo biológico SICBE.'
-  );
+  const [chiefComplaint, setChiefComplaint] = useState('');
+  const [symptomDuration, setSymptomDuration] = useState('');
+  const [discomfortLevel, setDiscomfortLevel] = useState<number | null>(null);
 
   // Vitals & Safety Inputs
   const [systolicBP, setSystolicBP] = useState<number>(128);
@@ -219,10 +220,10 @@ export const ActiveEncounterModal: React.FC<ActiveEncounterModalProps> = ({ isOp
             </div>
             <div>
               <h2 className="text-base font-bold text-slate-100">
-                Encuentro Clínico Integral (Pipeline HCI → MIACI → ECI)
+                Nueva consulta
               </h2>
               <p className="text-xs text-slate-400">
-                Paciente: {selectedPatient.firstName} {selectedPatient.lastName} ({selectedPatient.cohortCode}) · Médico: {currentUser.name}
+                {selectedPatient.firstName} {selectedPatient.lastName} · Te guiaremos paso a paso
               </p>
             </div>
           </div>
@@ -238,18 +239,18 @@ export const ActiveEncounterModal: React.FC<ActiveEncounterModalProps> = ({ isOp
         </div>
 
         {/* Stepper Steps */}
-        <div className="bg-slate-100 px-6 py-3 border-b border-slate-200 flex items-center justify-between text-xs font-semibold">
+        <div className="bg-slate-100 px-3 sm:px-6 py-3 border-b border-slate-200 flex items-center gap-2 overflow-x-auto text-xs font-semibold">
           {[
-            { num: 1, title: 'Motivo & Síntomas' },
-            { num: 2, title: 'Signos & E00' },
-            { num: 3, title: 'Pruebas Funcionales' },
-            { num: 4, title: 'Síntesis M23 / Overrides' },
-            { num: 5, title: 'Cierre & Firma' },
+            { num: 1, title: 'Lo que sientes' },
+            { num: 2, title: 'Signos vitales' },
+            { num: 3, title: 'Movilidad y fuerza' },
+            { num: 4, title: 'Revisión médica' },
+            { num: 5, title: 'Confirmar' },
           ].map((s) => (
             <button
               key={s.num}
               onClick={() => setStep(s.num as any)}
-              className={`flex items-center gap-1.5 py-1 px-2.5 rounded-md transition-colors cursor-pointer ${
+              className={`flex items-center gap-1.5 py-1 px-2.5 rounded-md transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                 step === s.num
                   ? 'bg-cyan-700 text-white font-bold'
                   : 'text-slate-600 hover:bg-slate-200'
@@ -264,9 +265,9 @@ export const ActiveEncounterModal: React.FC<ActiveEncounterModalProps> = ({ isOp
         </div>
 
         {/* Body Content */}
-        <div className="p-6 overflow-y-auto flex-1 space-y-5 text-xs">
+        <div className="p-3 sm:p-6 overflow-y-auto flex-1 space-y-5 text-xs">
           {/* MIACI Directives & Data Gap Real-time Guidance Banner */}
-          {safeDirectives.length > 0 && (
+          {step > 1 && safeDirectives.length > 0 && (
             <div className="p-3.5 rounded-xl border border-cyan-200 bg-cyan-50/70 space-y-2.5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -335,56 +336,196 @@ export const ActiveEncounterModal: React.FC<ActiveEncounterModalProps> = ({ isOp
 
           {/* STEP 1: Motivo de consulta */}
           {step === 1 && (
-            <div className="space-y-4">
-              <div>
-                <label className="block font-bold text-slate-800 mb-1">
-                  Motivo Principal del Encuentro (HCI)
-                </label>
-                <textarea
-                  rows={3}
-                  value={chiefComplaint}
-                  onChange={(e) => setChiefComplaint(e.target.value)}
-                  className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-600 text-xs text-slate-800"
-                  placeholder="Describa el motivo de la consulta..."
+            <div className="max-w-2xl mx-auto space-y-5">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-cyan-50 text-cyan-700 flex items-center justify-center shrink-0">
+                  <UserRound className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-cyan-700">
+                    Parte del paciente · {patientGuideStep} de 4
+                  </p>
+                  <h3 className="text-lg font-bold text-slate-900">Cuéntanos cómo te sientes</h3>
+                  <p className="text-sm text-slate-600 mt-1">
+                    Responde con tus propias palabras. No necesitas conocer términos médicos.
+                  </p>
+                </div>
+              </div>
+
+              <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                <div
+                  className="h-full bg-cyan-600 transition-all"
+                  style={{ width: `${patientGuideStep * 25}%` }}
                 />
               </div>
 
-              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
-                <h4 className="font-bold text-slate-800">
-                  Verificación Rápida de Banderas Rojas Inmediatas
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={isChestPain}
-                      onChange={(e) => setIsChestPain(e.target.checked)}
-                      className="rounded text-rose-600 focus:ring-rose-500 h-4 w-4"
-                    />
-                    <span className="text-slate-700 font-medium">Dolor torácico agudo opresivo</span>
+              {patientGuideStep === 1 && (
+                <div className="p-5 bg-white border border-slate-200 rounded-2xl space-y-3">
+                  <label className="block text-base font-bold text-slate-900">
+                    ¿Qué te trae hoy a consulta?
                   </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={isAcuteNeuro}
-                      onChange={(e) => setIsAcuteNeuro(e.target.checked)}
-                      className="rounded text-rose-600 focus:ring-rose-500 h-4 w-4"
-                    />
-                    <span className="text-slate-700 font-medium">Déficit neurológico o sospecha ACV</span>
-                  </label>
+                  <p className="text-sm text-slate-600">
+                    Por ejemplo: “me canso al caminar”, “me duele la espalda” o “vengo a mi chequeo”.
+                  </p>
+                  <textarea
+                    rows={4}
+                    value={chiefComplaint}
+                    onChange={(e) => setChiefComplaint(e.target.value)}
+                    className="w-full p-3.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-cyan-600 text-sm text-slate-800"
+                    placeholder="Escribe aquí lo que sientes o lo que deseas revisar..."
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setChiefComplaint('Vengo a mi chequeo de rutina y no tengo una molestia específica.')}
+                    className="text-xs font-semibold text-cyan-700 hover:text-cyan-900 cursor-pointer"
+                  >
+                    No tengo una molestia; vengo a chequeo
+                  </button>
                 </div>
-              </div>
+              )}
+
+              {patientGuideStep === 2 && (
+                <div className="p-5 bg-white border border-slate-200 rounded-2xl space-y-4">
+                  <div>
+                    <h4 className="text-base font-bold text-slate-900">¿Desde cuándo te sientes así?</h4>
+                    <p className="text-sm text-slate-600 mt-1">Elige la opción más cercana. Si no recuerdas, puedes indicarlo.</p>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {['Empezó hoy', 'Hace varios días', 'Hace varias semanas', 'Hace meses o más', 'No estoy seguro/a'].map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => setSymptomDuration(option)}
+                        className={`p-3 rounded-xl border text-left text-sm font-semibold transition-all cursor-pointer ${
+                          symptomDuration === option
+                            ? 'bg-cyan-50 border-cyan-600 text-cyan-900 ring-2 ring-cyan-500/20'
+                            : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+                        }`}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {patientGuideStep === 3 && (
+                <div className="p-5 bg-white border border-slate-200 rounded-2xl space-y-4">
+                  <div>
+                    <h4 className="text-base font-bold text-slate-900">¿Cuánto te molesta ahora mismo?</h4>
+                    <p className="text-sm text-slate-600 mt-1">0 significa ninguna molestia y 10, la peor molestia que puedas imaginar.</p>
+                  </div>
+                  <div className="grid grid-cols-6 sm:grid-cols-11 gap-2">
+                    {Array.from({ length: 11 }, (_, value) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setDiscomfortLevel(value)}
+                        aria-label={`Molestia ${value} de 10`}
+                        className={`aspect-square rounded-xl border font-bold text-sm cursor-pointer transition-all ${
+                          discomfortLevel === value
+                            ? 'bg-cyan-700 border-cyan-700 text-white ring-2 ring-cyan-500/20'
+                            : 'bg-white border-slate-200 text-slate-700 hover:border-slate-400'
+                        }`}
+                      >
+                        {value}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex justify-between text-[11px] text-slate-500">
+                    <span>Sin molestia</span>
+                    <span>Molestia muy fuerte</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setDiscomfortLevel(null)}
+                    className="text-xs font-semibold text-slate-600 hover:text-slate-900 cursor-pointer"
+                  >
+                    Prefiero no responder
+                  </button>
+                </div>
+              )}
+
+              {patientGuideStep === 4 && (
+                <div className="space-y-4">
+                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                    <h4 className="font-bold text-slate-900 text-sm">Tus respuestas</h4>
+                    <dl className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                      <div>
+                        <dt className="text-slate-500">Motivo</dt>
+                        <dd className="font-semibold text-slate-800 mt-0.5">{chiefComplaint || 'Sin especificar'}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-slate-500">Desde cuándo</dt>
+                        <dd className="font-semibold text-slate-800 mt-0.5">{symptomDuration || 'Sin especificar'}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-slate-500">Molestia actual</dt>
+                        <dd className="font-semibold text-slate-800 mt-0.5">{discomfortLevel === null ? 'Prefiere no responder' : `${discomfortLevel} de 10`}</dd>
+                      </div>
+                    </dl>
+                  </div>
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                    <h4 className="font-bold text-amber-950 text-sm">Antes de terminar, revisemos dos señales importantes</h4>
+                    <p className="text-xs text-amber-800 mt-1">Si no estás seguro/a, deja la opción sin marcar y avisa al personal.</p>
+                  </div>
+                  <label className={`block p-4 rounded-xl border cursor-pointer ${isChestPain ? 'bg-rose-50 border-rose-300' : 'bg-white border-slate-200'}`}>
+                    <span className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={isChestPain}
+                        onChange={(e) => setIsChestPain(e.target.checked)}
+                        className="mt-0.5 rounded text-rose-600 focus:ring-rose-500 h-4 w-4"
+                      />
+                      <span>
+                        <strong className="block text-sm text-slate-900">Siento presión o dolor fuerte en el pecho</strong>
+                        <span className="block text-xs text-slate-600 mt-1">Puede sentirse como peso, apretón o ardor intenso.</span>
+                      </span>
+                    </span>
+                  </label>
+                  <label className={`block p-4 rounded-xl border cursor-pointer ${isAcuteNeuro ? 'bg-rose-50 border-rose-300' : 'bg-white border-slate-200'}`}>
+                    <span className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={isAcuteNeuro}
+                        onChange={(e) => setIsAcuteNeuro(e.target.checked)}
+                        className="mt-0.5 rounded text-rose-600 focus:ring-rose-500 h-4 w-4"
+                      />
+                      <span>
+                        <strong className="block text-sm text-slate-900">De repente tengo dificultad para hablar o mover un lado del cuerpo</strong>
+                        <span className="block text-xs text-slate-600 mt-1">También puede incluir cara desviada, confusión o pérdida repentina de fuerza.</span>
+                      </span>
+                    </span>
+                  </label>
+                  <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start gap-3">
+                    <ClipboardCheck className="w-5 h-5 text-emerald-700 shrink-0" />
+                    <div>
+                      <h4 className="text-sm font-bold text-emerald-950">Tu parte está lista</h4>
+                      <p className="text-xs text-emerald-800 mt-1">
+                        Al continuar, el personal clínico completará las mediciones y revisará tus respuestas contigo.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
           {/* STEP 2: Signos Vitales y Motor E00 / Motor Adaptativo */}
           {step === 2 && (
             <div className="space-y-5">
+              <div className="p-4 rounded-xl bg-blue-50 border border-blue-200 flex items-start gap-3">
+                <Stethoscope className="w-5 h-5 text-blue-700 shrink-0" />
+                <div>
+                  <h3 className="text-sm font-bold text-blue-950">Esta parte la completa el personal clínico</h3>
+                  <p className="text-xs text-blue-800 mt-1">Aquí se registran mediciones tomadas con equipos médicos. El paciente no necesita conocer estos valores.</p>
+                </div>
+              </div>
               {/* Selector de Modo */}
               <div className="flex items-center justify-between p-2 bg-slate-100 rounded-xl border border-slate-200">
                 <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5 px-2">
                   <Sparkles className="w-4 h-4 text-cyan-700" />
-                  Método de Adquisición de Datos Clínicos:
+                  Forma de registrar las mediciones:
                 </span>
                 <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 shadow-xs">
                   <button
@@ -396,7 +537,7 @@ export const ActiveEncounterModal: React.FC<ActiveEncounterModalProps> = ({ isOp
                         : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
-                    Motor Adaptativo IMERTEC
+                    Preguntas paso a paso
                   </button>
                   <button
                     type="button"
@@ -407,7 +548,7 @@ export const ActiveEncounterModal: React.FC<ActiveEncounterModalProps> = ({ isOp
                         : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
-                    Parámetros Rápidos & Signos
+                    Registro rápido
                   </button>
                 </div>
               </div>
@@ -422,7 +563,7 @@ export const ActiveEncounterModal: React.FC<ActiveEncounterModalProps> = ({ isOp
                 <div className="space-y-5">
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     <div>
-                      <label className="block font-semibold text-slate-700 mb-1">Presión Sistólica (mmHg)</label>
+                      <label className="block font-semibold text-slate-700 mb-1">Presión arterial · número superior (mmHg)</label>
                       <input
                         type="number"
                         value={systolicBP}
@@ -431,7 +572,7 @@ export const ActiveEncounterModal: React.FC<ActiveEncounterModalProps> = ({ isOp
                       />
                     </div>
                     <div>
-                      <label className="block font-semibold text-slate-700 mb-1">Presión Diastólica (mmHg)</label>
+                      <label className="block font-semibold text-slate-700 mb-1">Presión arterial · número inferior (mmHg)</label>
                       <input
                         type="number"
                         value={diastolicBP}
@@ -440,7 +581,7 @@ export const ActiveEncounterModal: React.FC<ActiveEncounterModalProps> = ({ isOp
                       />
                     </div>
                     <div>
-                      <label className="block font-semibold text-slate-700 mb-1">Frecuencia Cardíaca (lpm)</label>
+                      <label className="block font-semibold text-slate-700 mb-1">Latidos del corazón por minuto</label>
                       <input
                         type="number"
                         value={heartRate}
@@ -449,7 +590,7 @@ export const ActiveEncounterModal: React.FC<ActiveEncounterModalProps> = ({ isOp
                       />
                     </div>
                     <div>
-                      <label className="block font-semibold text-slate-700 mb-1">Frecuencia Resp. (rpm)</label>
+                      <label className="block font-semibold text-slate-700 mb-1">Respiraciones por minuto</label>
                       <input
                         type="number"
                         value={respiratoryRate}
@@ -458,7 +599,7 @@ export const ActiveEncounterModal: React.FC<ActiveEncounterModalProps> = ({ isOp
                       />
                     </div>
                     <div>
-                      <label className="block font-semibold text-slate-700 mb-1">Saturación SpO2 (%)</label>
+                      <label className="block font-semibold text-slate-700 mb-1">Oxígeno en la sangre (%)</label>
                       <input
                         type="number"
                         value={oxygenSaturation}
@@ -467,7 +608,7 @@ export const ActiveEncounterModal: React.FC<ActiveEncounterModalProps> = ({ isOp
                       />
                     </div>
                     <div>
-                      <label className="block font-semibold text-slate-700 mb-1">CA-125 (U/mL)</label>
+                      <label className="block font-semibold text-slate-700 mb-1">Resultado de laboratorio CA-125 (U/mL)</label>
                       <input
                         type="number"
                         value={ca125}
@@ -526,10 +667,17 @@ export const ActiveEncounterModal: React.FC<ActiveEncounterModalProps> = ({ isOp
           {/* STEP 3: Pruebas Funcionales */}
           {step === 3 && (
             <div className="space-y-4">
+              <div className="p-4 rounded-xl bg-blue-50 border border-blue-200 flex items-start gap-3">
+                <Stethoscope className="w-5 h-5 text-blue-700 shrink-0" />
+                <div>
+                  <h3 className="text-sm font-bold text-blue-950">Pruebas realizadas por el personal clínico</h3>
+                  <p className="text-xs text-blue-800 mt-1">El profesional medirá cómo camina la persona, su fuerza y el apoyo que necesita en actividades diarias.</p>
+                </div>
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
                   <label className="block font-bold text-slate-800">
-                    Velocidad de Marcha Habitual (4 metros)
+                    Velocidad al caminar 4 metros
                   </label>
                   <div className="flex items-center gap-3">
                     <input
@@ -548,7 +696,7 @@ export const ActiveEncounterModal: React.FC<ActiveEncounterModalProps> = ({ isOp
 
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
                   <label className="block font-bold text-slate-800">
-                    Fuerza de Prensión Manual (Dinamometría)
+                    Fuerza de la mano con dinamómetro
                   </label>
                   <div className="flex items-center gap-3">
                     <input
@@ -569,7 +717,7 @@ export const ActiveEncounterModal: React.FC<ActiveEncounterModalProps> = ({ isOp
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
                   <label className="block font-bold text-slate-800">
-                    Dependencia en ABVD (0 a 6 actividades dependientes)
+                    Actividades diarias en las que necesita ayuda (0 a 6)
                   </label>
                   <input
                     type="number"
@@ -586,7 +734,7 @@ export const ActiveEncounterModal: React.FC<ActiveEncounterModalProps> = ({ isOp
 
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
                   <label className="block font-bold text-slate-800">
-                    Criterios de Fragilidad de Fried (0 a 5 componentes)
+                    Señales de fragilidad identificadas (0 a 5)
                   </label>
                   <input
                     type="number"
@@ -610,10 +758,10 @@ export const ActiveEncounterModal: React.FC<ActiveEncounterModalProps> = ({ isOp
               <div className="flex items-center justify-between pb-2 border-b border-slate-200">
                 <div>
                   <h4 className="font-bold text-slate-900 text-sm">
-                    Módulo 23 (M23): Síntesis Pre-SICBE y Autoridad Médica
+                    Resumen para revisión médica
                   </h4>
                   <p className="text-[11px] text-slate-500">
-                    El médico mantiene la autoridad final. Puede refinar o revocar cualquier inferencia algorítmica con justificación clínica documentada.
+                    El profesional revisa los resultados, corrige cualquier dato necesario y deja documentado su criterio.
                   </p>
                 </div>
               </div>
@@ -738,10 +886,10 @@ export const ActiveEncounterModal: React.FC<ActiveEncounterModalProps> = ({ isOp
                   <Lock className="w-6 h-6" />
                 </div>
                 <h4 className="font-bold text-slate-900 text-sm">
-                  Cierre de Encuentro y Publicación de ECI
+                  Confirmar y cerrar la consulta
                 </h4>
                 <p className="text-slate-500 mt-1">
-                  Al firmar, el Estado Clínico Integral (ECI) transiciona a <strong>E8_PUBLICADO</strong> y se vuelve <strong>inmutable</strong> para trazabilidad W3C PROV-O.
+                  El profesional confirma que revisó la información y firma el registro clínico.
                 </p>
               </div>
 
@@ -778,7 +926,7 @@ export const ActiveEncounterModal: React.FC<ActiveEncounterModalProps> = ({ isOp
                     className="w-full py-2.5 bg-cyan-700 hover:bg-cyan-800 text-white font-bold rounded-lg flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
                   >
                     <Key className="w-4 h-4" />
-                    <span>Firmar Digitalmente y Publicar ECI</span>
+                    <span>Firmar y cerrar consulta</span>
                   </button>
                 </div>
               )}
@@ -789,10 +937,16 @@ export const ActiveEncounterModal: React.FC<ActiveEncounterModalProps> = ({ isOp
         {/* Footer Navigation */}
         <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
           <button
-            onClick={() => setStep((prev) => Math.max(1, prev - 1) as any)}
-            disabled={step === 1}
+            onClick={() => {
+              if (step === 1 && patientGuideStep > 1) {
+                setPatientGuideStep((prev) => Math.max(1, prev - 1) as 1 | 2 | 3 | 4);
+                return;
+              }
+              setStep((prev) => Math.max(1, prev - 1) as any);
+            }}
+            disabled={step === 1 && patientGuideStep === 1}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer ${
-              step === 1 ? 'opacity-40 cursor-not-allowed text-slate-400' : 'text-slate-700 hover:bg-slate-200'
+              step === 1 && patientGuideStep === 1 ? 'opacity-40 cursor-not-allowed text-slate-400' : 'text-slate-700 hover:bg-slate-200'
             }`}
           >
             <ArrowLeft className="w-3.5 h-3.5" />
@@ -801,10 +955,16 @@ export const ActiveEncounterModal: React.FC<ActiveEncounterModalProps> = ({ isOp
 
           {step < 5 ? (
             <button
-              onClick={() => setStep((prev) => Math.min(5, prev + 1) as any)}
+              onClick={() => {
+                if (step === 1 && patientGuideStep < 4) {
+                  setPatientGuideStep((prev) => Math.min(4, prev + 1) as 1 | 2 | 3 | 4);
+                  return;
+                }
+                setStep((prev) => Math.min(5, prev + 1) as any);
+              }}
               className="px-4 py-1.5 bg-cyan-700 hover:bg-cyan-800 text-white rounded-lg text-xs font-semibold flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
             >
-              <span>Siguiente</span>
+              <span>{step === 1 && patientGuideStep === 4 ? 'Entregar al personal clínico' : 'Siguiente'}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           ) : (
