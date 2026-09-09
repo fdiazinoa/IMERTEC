@@ -14,12 +14,14 @@ interface DashboardOverviewProps {
   onSelectPatient: (id: string, tab?: string) => void;
   onOpenSafetyModal: () => void;
   onOpenNewPatientModal: () => void;
+  onOpenPatientIntake: () => void;
 }
 
 export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   onSelectPatient,
   onOpenSafetyModal,
   onOpenNewPatientModal,
+  onOpenPatientIntake,
 }) => {
   const { patients, safetyAlerts, currentUser } = useClinical();
   const [patientSearch, setPatientSearch] = useState('');
@@ -54,14 +56,22 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             Busca un paciente para continuar su atención o registra un expediente nuevo.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={onOpenNewPatientModal}
-          className="inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-xl bg-cyan-600 px-4 py-3 text-sm font-semibold text-white hover:bg-cyan-500 sm:self-auto"
-        >
-          <Plus className="h-4 w-4" />
-          Nuevo paciente
-        </button>
+        <div className="flex shrink-0 flex-col gap-2 sm:items-stretch">
+          <button
+            type="button"
+            onClick={onOpenNewPatientModal}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-600 px-4 py-3 text-sm font-semibold text-white hover:bg-cyan-500"
+          >
+            <Plus className="h-4 w-4" /> Nuevo paciente
+          </button>
+          <button
+            type="button"
+            onClick={onOpenPatientIntake}
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/25 px-4 py-3 text-sm font-semibold text-white hover:bg-white/10"
+          >
+            Completar ficha autoguiada
+          </button>
+        </div>
       </section>
 
       <section>

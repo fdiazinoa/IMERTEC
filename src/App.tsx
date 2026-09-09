@@ -27,6 +27,7 @@ import { ActiveEncounterModal } from './components/ActiveEncounterModal';
 import { ClinicalTestSuiteModal } from './components/ClinicalTestSuiteModal';
 import { LoginView } from './components/LoginView';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { PatientSelfIntakeView } from './components/PatientSelfIntakeView';
 
 const AppContent: React.FC = () => {
   const {
@@ -58,8 +59,20 @@ const AppContent: React.FC = () => {
     setIsEncounterModalOpen(true);
   };
 
+  if (currentTab === 'patient-intake') {
+    return (
+      <PatientSelfIntakeView
+        onExit={() => setCurrentTab('dashboard')}
+        onComplete={(patientId) => {
+          setSelectedPatient(patientId);
+          setCurrentTab('summary');
+        }}
+      />
+    );
+  }
+
   if (!isAuthenticated) {
-    return <LoginView />;
+    return <LoginView onOpenPatientIntake={() => setCurrentTab('patient-intake')} />;
   }
 
   const isPatientSubView = [
@@ -105,6 +118,7 @@ const AppContent: React.FC = () => {
             onSelectPatient={handleSelectPatient}
             onOpenSafetyModal={() => setIsSafetyModalOpen(true)}
             onOpenNewPatientModal={() => setIsNewPatientModalOpen(true)}
+            onOpenPatientIntake={() => setCurrentTab('patient-intake')}
           />
         )}
 
