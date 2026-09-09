@@ -20,7 +20,11 @@ import {
 } from 'lucide-react';
 import { UserRole } from '../types/clinical';
 
-export const LoginView: React.FC = () => {
+interface LoginViewProps {
+  onOpenPatientIntake?: () => void;
+}
+
+export const LoginView: React.FC<LoginViewProps> = ({ onOpenPatientIntake }) => {
   const { availableUsers, login, switchUser, requestPasswordRecovery } = useClinical();
 
   const [email, setEmail] = useState('dr.liriano@imertec.org');
@@ -86,6 +90,21 @@ export const LoginView: React.FC = () => {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-xl px-4 sm:px-0">
         <div className="bg-white py-8 px-6 shadow-2xl rounded-2xl sm:px-10 border border-slate-200">
+          {onOpenPatientIntake && (
+            <div className="mb-6 rounded-xl border border-cyan-200 bg-cyan-50 p-4">
+              <p className="text-sm font-bold text-slate-900">¿Eres paciente?</p>
+              <p className="mt-1 text-xs leading-relaxed text-slate-600">
+                Completa tu ficha paso a paso antes de tu consulta. No necesitas conocimientos médicos.
+              </p>
+              <button
+                type="button"
+                onClick={onOpenPatientIntake}
+                className="mt-3 w-full rounded-lg bg-cyan-700 px-4 py-2.5 text-xs font-semibold text-white hover:bg-cyan-800"
+              >
+                Completar mi ficha
+              </button>
+            </div>
+          )}
           {errorMessage && (
             <div className="mb-5 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
